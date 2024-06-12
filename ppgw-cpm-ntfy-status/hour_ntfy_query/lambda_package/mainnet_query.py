@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 import json
 import time
 import boto3
@@ -6,7 +7,7 @@ import boto3
 
 def get_query_id(client, start_time, end_time):
     
-    log_group_name = '/aws/lambda/ppgw-resolve-qr'
+    log_group_name = '/aws/lambda/ppgw-cpm-ntfy-status'
 
     response = client.start_query(
     logGroupName=log_group_name,
@@ -14,13 +15,17 @@ def get_query_id(client, start_time, end_time):
     endTime=end_time,
     queryString='\
             fields @timestamp, @message \
-            | filter @message like "target" or @message like "resultCode" \
+            | filter @message like "HIVEX" \
             | parse @message "* INFO" as id \
-            | parse @message "target*qr*}" as _, qrcode \
-            | parse @message "resultCode*," as resultCode \
-            | fields replace(qrcode, ":", "") as qr \
-            | fields replace(resultCode, ":", "") as result\
-            | display @timestamp, id, qr, result',
+            | parse @message "merchantName*," as merchant \
+            | parse @message "value*}" as val \
+            | parse @message "otcRequestId*," as otc \
+            | parse @message "resultCode*," as result \
+            | fields replace(merchant, ":", "") as merchantName \
+            | fields replace(val, ":", "") as value \
+            | fields replace(otc, ":", "") as otcRequestId \
+            | fields replace(result, ":", "") as resultCode\
+            | display @timestamp, id, merchantName, value, otcRequestId, resultCode',
     )
             
     query_id = response['queryId']
@@ -43,22 +48,22 @@ def wait_and_get_query(client, query_id):
 
 def get_query(s_time, e_time):
     
-    role_arn = 'arn:aws:iam::281553677985:role/fe-log-automation'
+    # role_arn = 'arn:aws:iam::281553677985:role/fe-log-automation'
     
-    sts_client = boto3.client('sts')
+    # sts_client = boto3.client('sts')
     
-    assumed_role = sts_client.assume_role(
-        RoleArn=role_arn,
-        RoleSessionName='CrossAccountLambdaSession'
-    )
+    # assumed_role = sts_client.assume_role(
+    #     RoleArn=role_arn,
+    #     RoleSessionName='CrossAccountLambdaSession'
+    # )
     
-    credentials = assumed_role['Credentials']
+    # credentials = assumed_role['Credentials']
     
     c = boto3.client(
         'logs',
-        aws_access_key_id=credentials['AccessKeyId'],
-        aws_secret_access_key=credentials['SecretAccessKey'],
-        aws_session_token=credentials['SessionToken'],
+        # aws_access_key_id=credentials['AccessKeyId'],
+        # aws_secret_access_key=credentials['SecretAccessKey'],
+        # aws_session_token=credentials['SessionToken'],
         region_name='ap-northeast-1'
     )
     
@@ -68,51 +73,20 @@ def get_query(s_time, e_time):
     event_streams = defaultdict(dict)
     for event in log_data[::-1]:
         id = event[1]["value"]
-        if id not in event_streams:
-            event_streams[id] = {
-                event[0]["field"].replace("@", "") : event[0]["value"],
-                event[2]["field"]: event[2]["value"].replace("\"", "") 
-            }
-        else:
-            event_streams[id]["result"] = event[-2]["value"].replace("\"", "")
+        event_streams[id] = {
+            event[0]["field"].replace("@", "") : event[0]["value"],
+            event[2]["field"]: event[2]["value"].replace("\"", ""), 
+            event[3]["field"]: event[3]["value"].replace("\"", ""), 
+            event[4]["field"]: event[4]["value"].replace("\"", ""), 
+            event[5]["field"]: event[5]["value"].replace("\"", "")
+        }
     
+    print(json.dumps(event_streams, indent=4))
     return event_streams
     
+# This is for manual configuring specific time frame for testing purposes
+test_start, test_end = "2024-05-29T09:05:00.000Z", "2024-05-29T10:06:00.000Z"
+start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
+
+get_query(start_time, end_time)
     
-def test(start_time, end_time):
-    log_group_name = '/aws/lambda/ppgw-resolve-qr'
-    logs_client = boto3.client('logs', region_name='ap-northeast-1')
-    
-    try:
-        response = logs_client.start_query(
-            logGroupName=log_group_name,
-            startTime=start_time, 
-            endTime=end_time,
-            queryString='\
-                    fields @timestamp, @message \
-                    | filter @message like "target" or @message like "resultCode" \
-                    | parse @message "* INFO" as id \
-                    | parse @message "target*qr*}" as _, qrcode \
-                    | parse @message "resultCode*," as resultCode \
-                    | fields replace(qrcode, ":", "") as qr \
-                    | fields replace(resultCode, ":", "") as result\
-                    | display @timestamp, id, qr, result',
-        )
-        print("successfully get response")
-        
-        log_streams = response.get('logStreams', [])
-        
-        for log_stream in log_streams:
-            log_stream_name = log_stream['logStreamName']
-            
-            events_response = logs_client.get_log_events(
-                logGroupName=log_group_name,
-                logStreamName=log_stream_name,
-                startFromHead=True
-            )
-            
-            for event in events_response.get('events', []):
-                print(event['message'])
-                
-    except Exception as e:
-        print(f"Error accessing CloudWatch Logs in region: {str(e)}")
