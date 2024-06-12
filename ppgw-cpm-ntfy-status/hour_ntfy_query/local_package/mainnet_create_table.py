@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS mainnet_hour_qr_raw (
 # '''
 
 cursor.execute(create_raw_table)
-cursor.execute(create_analysis_table)
+# cursor.execute(create_analysis_table)
 
 connection.commit()
 
