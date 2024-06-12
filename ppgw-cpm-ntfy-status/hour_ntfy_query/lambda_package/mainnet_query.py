@@ -73,20 +73,18 @@ def get_query(s_time, e_time):
     event_streams = defaultdict(dict)
     for event in log_data[::-1]:
         id = event[1]["value"]
-        event_streams[id] = {
-            event[0]["field"].replace("@", "") : event[0]["value"],
-            event[2]["field"]: event[2]["value"].replace("\"", ""), 
-            event[3]["field"]: event[3]["value"].replace("\"", ""), 
-            event[4]["field"]: event[4]["value"].replace("\"", ""), 
-            event[5]["field"]: event[5]["value"].replace("\"", "")
-        }
+        otcId = event[4]["value"].replace("\"", "")
+        if id == otcId:
+            event_streams[id] = {
+                event[0]["field"].replace("@", "") : event[0]["value"],
+                event[2]["field"]: event[2]["value"].replace("\"", ""), 
+                event[3]["field"]: event[3]["value"].replace("\"", ""), 
+                event[4]["field"]: otcId, 
+                event[5]["field"]: event[5]["value"].replace("\"", "")
+            }
     
     print(json.dumps(event_streams, indent=4))
     return event_streams
-    
-# This is for manual configuring specific time frame for testing purposes
-test_start, test_end = "2024-05-29T09:05:00.000Z", "2024-05-29T10:06:00.000Z"
-start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
 
-get_query(start_time, end_time)
+
     

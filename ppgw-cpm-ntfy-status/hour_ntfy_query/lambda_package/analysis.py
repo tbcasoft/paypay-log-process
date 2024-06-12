@@ -3,11 +3,14 @@ from datetime import datetime
 import json
 from hour import set_time
 
+from mainnet_query import get_query
+
 start_time, end_time = set_time()
 
 # This is for manual configuring specific time frame for testing purposes
-# test_start, test_end = "2024-05-30T10:21:00.000Z", "2024-05-30T10:30:00.000Z"
-# start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
+test_start, test_end = "2024-05-30T10:21:00.000Z", "2024-05-30T10:30:00.000Z"
+start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
+get_query(start_time, end_time)
 
 def result_analysis(event_streams):
 
@@ -41,3 +44,11 @@ def result_analysis(event_streams):
     print("non-unique analysis:", json.dumps(non_unique, indent=4))
     print("unique analysis:", json.dumps(unique, indent=4))
     return non_unique, unique
+
+
+
+# For testing
+test_start, test_end = "2024-05-29T09:05:00.000Z", "2024-05-29T10:06:00.000Z"
+start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
+
+get_query(start_time, end_time)

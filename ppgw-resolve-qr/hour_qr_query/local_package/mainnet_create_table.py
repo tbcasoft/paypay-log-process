@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS mainnet_hour_qr_raw (
     time TIMESTAMP,
     id VARCHAR(100),
     qr VARCHAR(100),
-    result_code VARCHAR(20),
+    result_code VARCHAR(30),
     PRIMARY KEY (time, id)
 )
 '''

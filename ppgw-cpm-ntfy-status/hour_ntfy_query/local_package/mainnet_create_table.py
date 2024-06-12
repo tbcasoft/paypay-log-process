@@ -11,12 +11,13 @@ connection = mysql.connector.connect(
 cursor = connection.cursor()
 
 create_raw_table = '''
-CREATE TABLE IF NOT EXISTS mainnet_hour_qr_raw (
+CREATE TABLE IF NOT EXISTS mainnet_ntfy_status_raw (
     time TIMESTAMP,
-    id VARCHAR(100),
-    qr VARCHAR(100),
-    result_code VARCHAR(20),
-    PRIMARY KEY (time, id)
+    merchantName VARCHAR(300),
+    value INT,
+    otcRequestId VARCHAR(100),
+    resultCode VARCHAR(30),
+    PRIMARY KEY (otcRequestId)
 )
 '''
 
