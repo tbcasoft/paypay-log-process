@@ -9,8 +9,7 @@ def set_time():
     start_time = end_time - timedelta(hours=1)
 
     s, e = int(start_time.timestamp()), int(end_time.timestamp())
-    print(start_time, end_time)
-    print(s, e)
+
     return s, e
 
 
