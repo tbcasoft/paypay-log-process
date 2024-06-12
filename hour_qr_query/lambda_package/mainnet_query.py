@@ -1,0 +1,118 @@
+from collections import defaultdict
+import json
+import time
+import boto3
+
+
+def get_query_id(client, start_time, end_time):
+    
+    log_group_name = '/aws/lambda/ppgw-resolve-qr'
+
+    response = client.start_query(
+    logGroupName=log_group_name,
+    startTime=start_time, 
+    endTime=end_time,
+    queryString='\
+            fields @timestamp, @message \
+            | filter @message like "target" or @message like "resultCode" \
+            | parse @message "* INFO" as id \
+            | parse @message "target*qr*}" as _, qrcode \
+            | parse @message "resultCode*," as resultCode \
+            | fields replace(qrcode, ":", "") as qr \
+            | fields replace(resultCode, ":", "") as result\
+            | display @timestamp, id, qr, result',
+    )
+            
+    query_id = response['queryId']
+
+    return query_id
+
+
+def wait_and_get_query(client, query_id):
+    while True:
+        time.sleep(1)
+        results = client.get_query_results(queryId=query_id)
+        if results["status"] in [
+            "Complete",
+            "Failed",
+            "Cancelled",
+            "Timeout",
+            "Unknown",
+        ]:
+            return results.get("results", [])
+
+def get_query(s_time, e_time):
+    
+    role_arn = 'arn:aws:iam::281553677985:role/fe-log-automation'
+    
+    sts_client = boto3.client('sts')
+    
+    assumed_role = sts_client.assume_role(
+        RoleArn=role_arn,
+        RoleSessionName='CrossAccountLambdaSession'
+    )
+    
+    credentials = assumed_role['Credentials']
+    
+    c = boto3.client(
+        'logs',
+        aws_access_key_id=credentials['AccessKeyId'],
+        aws_secret_access_key=credentials['SecretAccessKey'],
+        aws_session_token=credentials['SessionToken'],
+        region_name='ap-northeast-1'
+    )
+    
+    id = get_query_id(client=c, start_time=s_time, end_time=e_time)
+    log_data = wait_and_get_query(client=c, query_id=id)
+    
+    event_streams = defaultdict(dict)
+    for event in log_data[::-1]:
+        id = event[1]["value"]
+        if id not in event_streams:
+            event_streams[id] = {
+                event[0]["field"].replace("@", "") : event[0]["value"],
+                event[2]["field"]: event[2]["value"].replace("\"", "") 
+            }
+        else:
+            event_streams[id]["result"] = event[-2]["value"].replace("\"", "")
+    
+    return event_streams
+    
+    
+def test(start_time, end_time):
+    log_group_name = '/aws/lambda/ppgw-resolve-qr'
+    logs_client = boto3.client('logs', region_name='ap-northeast-1')
+    
+    try:
+        response = logs_client.start_query(
+            logGroupName=log_group_name,
+            startTime=start_time, 
+            endTime=end_time,
+            queryString='\
+                    fields @timestamp, @message \
+                    | filter @message like "target" or @message like "resultCode" \
+                    | parse @message "* INFO" as id \
+                    | parse @message "target*qr*}" as _, qrcode \
+                    | parse @message "resultCode*," as resultCode \
+                    | fields replace(qrcode, ":", "") as qr \
+                    | fields replace(resultCode, ":", "") as result\
+                    | display @timestamp, id, qr, result',
+        )
+        print("successfully get response")
+        
+        log_streams = response.get('logStreams', [])
+        
+        for log_stream in log_streams:
+            log_stream_name = log_stream['logStreamName']
+            
+            events_response = logs_client.get_log_events(
+                logGroupName=log_group_name,
+                logStreamName=log_stream_name,
+                startFromHead=True
+            )
+            
+            for event in events_response.get('events', []):
+                print(event['message'])
+                
+    except Exception as e:
+        print(f"Error accessing CloudWatch Logs in region: {str(e)}")

@@ -7,7 +7,7 @@ def update_raw_table(connection, log_event_streams):
     for id, event in log_event_streams.items():
         
         update_table = '''
-        INSERT INTO hour_qr_raw
+        INSERT INTO mainnet_hour_qr_raw
         (time, id, qr, result_code)
         VALUES
             (%s, %s, %s, %s)
@@ -23,7 +23,7 @@ def update_analysis_table(connection, start_time, log_event_streams):
     cursor = connection.cursor()
 
     update_table = '''
-    INSERT INTO hour_qr_result 
+    INSERT INTO mainnet_hour_qr_result 
     (time, SUCCESS, MERCHANT_SUSPENDED, HIVEX_UNAVAILABLE_MERCHANT, Dynamic_QR, P2P, Others, Total,
         SUCCESS_unique, MERCHANT_SUSPENDED_unique, HIVEX_UNAVAILABLE_MERCHANT_unique, 
         Dynamic_QR_unique, P2P_unique, Others_unique, Total_unique)
@@ -34,7 +34,7 @@ def update_analysis_table(connection, start_time, log_event_streams):
 
     start_time = datetime.fromtimestamp(start_time, timezone.utc)
     formatted_time = start_time.strftime('%Y-%m-%d %H:%M:%S')
-    print(formatted_time)
+
     cursor.execute(update_table, (formatted_time, 
                 non_unique["SUCCESS"], non_unique["MERCHANT_SUSPENDED"], non_unique["HIVEX_UNAVAILABLE_MERCHANT"], 
                 non_unique["Dynamic_QR"], non_unique["P2P"], non_unique["Others"], non_unique["Total"], 

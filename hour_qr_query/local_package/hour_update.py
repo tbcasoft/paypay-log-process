@@ -11,7 +11,6 @@ db_connection = pymysql.connect(
     password='&o17r%FK$Ft8'
 )
 
-
 s, e = set_time()
 event_streams = get_query(s_time=s, e_time=e)
 

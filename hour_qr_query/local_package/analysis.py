@@ -1,13 +1,12 @@
 from collections import defaultdict
 from datetime import datetime
 import json
-from query import get_query
 from hour import set_time
 
 start_time, end_time = set_time()
 
+# This is for manual configuring specific time frame for testing purposes
 # test_start, test_end = "2024-05-30T10:21:00.000Z", "2024-05-30T10:30:00.000Z"
-
 # start_time, end_time = int(datetime.fromisoformat(test_start).timestamp()), int(datetime.fromisoformat(test_end).timestamp())
 
 def result_analysis(event_streams):
@@ -34,7 +33,7 @@ def result_analysis(event_streams):
                     result_key = "Others"
         non_unique[result_key] += 1
         unique[result_key] += 0 if qr in seen_qr else 1
-        # print(qr, "(unique)" if qr not in seen_qr else "(repeat)", "\n")
+        print(qr, "(unique)" if qr not in seen_qr else "(repeat)", "\n")
         seen_qr.add(qr)
 
     non_unique["Total"] = sum(non_unique.values())
