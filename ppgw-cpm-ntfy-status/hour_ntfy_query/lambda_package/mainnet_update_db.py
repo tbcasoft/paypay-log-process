@@ -4,7 +4,7 @@ from analysis import result_analysis
 def update_raw_table(connection, log_event_streams):
     cursor = connection.cursor()
 
-    for event in log_event_streams.keys():
+    for event in log_event_streams.values():
         
         update_table = '''
         INSERT INTO mainnet_ntfy_status_raw

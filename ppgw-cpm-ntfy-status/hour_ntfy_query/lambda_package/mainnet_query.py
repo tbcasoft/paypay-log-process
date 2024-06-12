@@ -83,7 +83,7 @@ def get_query(s_time, e_time):
                 event[5]["field"]: event[5]["value"].replace("\"", "")
             }
     
-    print(json.dumps(event_streams, indent=4))
+    # print(json.dumps(event_streams, indent=4))
     return event_streams
 
 
