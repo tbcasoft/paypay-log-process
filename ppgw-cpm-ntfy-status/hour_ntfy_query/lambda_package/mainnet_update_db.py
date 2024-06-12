@@ -4,15 +4,16 @@ from analysis import result_analysis
 def update_raw_table(connection, log_event_streams):
     cursor = connection.cursor()
 
-    for id, event in log_event_streams.items():
+    for event in log_event_streams.keys():
         
         update_table = '''
-        INSERT INTO mainnet_hour_qr_raw
-        (time, id, qr, result_code)
+        INSERT INTO mainnet_ntfy_status_raw
+        (time, merchantName, value, otcRequestId, resultCode)
         VALUES
-            (%s, %s, %s, %s)
+            (%s, %s, %s, %s, %s)
         '''
-        cursor.execute(update_table, (event["timestamp"], id, event["qr"], event["result"]))
+        cursor.execute(update_table, (event["timestamp"], event["merchantName"],
+                                       event["value"], event["otcRequestId"], event["resultCode"]))
     
     connection.commit()
     cursor.close()
