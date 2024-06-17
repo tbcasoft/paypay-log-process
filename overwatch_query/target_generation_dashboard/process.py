@@ -13,7 +13,8 @@ test_cookie = tc_login.get_test_cookie()
 gen_target_response = get_API_gen_target_response(test_cookie, start_time, end_time)
 
 def process_gen_target_response(response):
-    
+
+    # print(json.dumps(response, indent=4))
     data_collector = defaultdict(dict)
     sub_dict = response["aggregations"]["0"]["buckets"][0]["1"]["buckets"]
 

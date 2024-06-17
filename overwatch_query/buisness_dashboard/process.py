@@ -18,6 +18,8 @@ issuer_currency_response = get_issuer_currency_response(test_cookie, start_time,
 
 def process_pair_response(response):
 
+    # print(json.dumps(response, indent=4))
+
     data_collector = {
     "CPM" : defaultdict(dict),
     "MPM" : defaultdict(dict)
@@ -46,6 +48,8 @@ def process_pair_response(response):
     return data_collector
 
 def process_issuer_currency_response(response):
+    # print(json.dumps(response, indent=4))
+
     data_collector = defaultdict(dict)
 
     toIssuers_lst = response["aggregations"]["2"]["buckets"][0]["8"]["buckets"]
