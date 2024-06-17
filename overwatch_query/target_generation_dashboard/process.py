@@ -1,6 +1,6 @@
 from collections import defaultdict
 import json
-from response import *
+from response import get_API_gen_target_response
 import ultraimport # type: ignore
 
 get_time = ultraimport('__dir__/../generate_time.py', 'get_time')
