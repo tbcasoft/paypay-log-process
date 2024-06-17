@@ -21,7 +21,7 @@ def process_jobmodels_RFP_response(response):
 
     for target_carrier_id in rejected:
         data_collector[target_carrier_id["key"]] = {
-            "count": target_carrier_id["2"]["value"]
+            "rejected_count": target_carrier_id["2"]["value"]
         }
         
     return data_collector
