@@ -1,5 +1,5 @@
 import json
-import requests
+import requests # type: ignore
 
 def get_cookie():
     login_url = 'https://tc-2pn1ygvtl5.xiveh.com/tc/auth/login'
@@ -22,3 +22,6 @@ def get_cookie():
         print("Login failed")
     
     return cookie_val
+
+def get_test_cookie():
+    return 'MTcxODU5NTQwM3xHd3dBR0RZMk5tWmhNREl4TUdNd01XUmpZV0l3T1RrNU5UQTNZZz09fK3viv76P_Si2R4XaMHTs0nKsNxo0tcdb4LFNspRClrS';
