@@ -14,8 +14,15 @@ gen_target_response = get_API_gen_target_response(test_cookie, start_time, end_t
 
 def process_gen_target_response(response):
     
-    result = response["aggregations"]["0"]["buckets"][0]["1"]["buckets"]
-    return result
+    data_collector = defaultdict(dict)
+    sub_dict = response["aggregations"]["0"]["buckets"][0]["1"]["buckets"]
+
+    for site_src in sub_dict:
+        data_collector[site_src["key"]] = {
+            "count": site_src["doc_count"]
+        }
+        
+    return data_collector
 
 gen_target_data = process_gen_target_response(gen_target_response)
 print(json.dumps(gen_target_data, indent=4))
