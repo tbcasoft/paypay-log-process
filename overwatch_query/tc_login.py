@@ -1,7 +1,7 @@
 import json
 import requests
 
-def getCookie():
+def get_cookie():
     login_url = 'https://tc-2pn1ygvtl5.xiveh.com/tc/auth/login'
     login_data = {
         'username': 'casper',

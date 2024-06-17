@@ -1,6 +1,8 @@
 import json
-import requests
-from generate_time import getTime
+import ultraimport # type: ignore
+import requests # type: ignore
+
+get_time = ultraimport('__dir__/../generate_time.py', 'get_time')
 
 # start_time, end_time = getTime()
 start_time, end_time = "2024-06-14T06:45:00.000Z", "2024-06-14T07:00:00.000Z"
@@ -8,7 +10,8 @@ start_time, end_time = "2024-06-14T06:45:00.000Z", "2024-06-14T07:00:00.000Z"
 def get_response(cookie, start_time, end_time):
 
     cookies = {
-        'tcSession': cookie,
+        # 'tcSession': cookie,
+        'tcSession': 'MTcxODU5NTQwM3xHd3dBR0RZMk5tWmhNREl4TUdNd01XUmpZV0l3T1RrNU5UQTNZZz09fK3viv76P_Si2R4XaMHTs0nKsNxo0tcdb4LFNspRClrS',
     }
 
     headers = {

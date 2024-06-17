@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 
-def getTime():
+def get_time():
     current_time = datetime.now(timezone.utc)
 
     end_time = current_time.replace(hour= 0, minute= 0, second=0, microsecond=0)
