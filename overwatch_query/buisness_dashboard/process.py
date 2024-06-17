@@ -11,10 +11,10 @@ tc_login = ultraimport('__dir__/../tc_login.py')
 start_time, end_time = "2024-06-16T00:00:00.000Z", "2024-06-17T00:00:00.000Z"
 
 # cookie = tc_login.get_cookie()
-cookie = tc_login.get_test_cookie()
+test_cookie = tc_login.get_test_cookie()
 
-pairs_response = get_pairs_response(cookie, start_time, end_time)
-issuer_currency_response = get_issuer_currency_response(cookie, start_time, end_time)
+pairs_response = get_pairs_response(test_cookie, start_time, end_time)
+issuer_currency_response = get_issuer_currency_response(test_cookie, start_time, end_time)
 
 def process_pair_response(response):
 
