@@ -24,6 +24,6 @@ def get_dashboard_data(cookie, start_time, end_time):
 
     jobmodels_RFP_data = process_jobmodels_RFP_response(jobmodels_RFP_response)
 
-    print(json.dumps(jobmodels_RFP_data, indent=4))
+    # print(json.dumps(jobmodels_RFP_data, indent=4))
 
     return jobmodels_RFP_data

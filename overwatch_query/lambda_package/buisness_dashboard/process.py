@@ -59,8 +59,8 @@ def get_dashboard_data(cookie, start_time, end_time):
     issuer_currency_data = process_issuer_currency_response(issuer_currency_response)
     pairs_data = process_pair_response(pairs_response)
 
-    print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
-    print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
+    # print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
+    # print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
 
     return issuer_currency_data, pairs_data
 

@@ -22,6 +22,6 @@ def get_dashboard_data(cookie, start_time, end_time):
 
     job_modles_invoice_data = process_job_modles_invoice_response(job_modles_invoice_response)
 
-    print(json.dumps(job_modles_invoice_data, indent=4))
+    # print(json.dumps(job_modles_invoice_data, indent=4))
 
     return job_modles_invoice_data

@@ -21,7 +21,7 @@ def get_dashboard_data(cookie, start_time, end_time):
 
     gen_target_data = process_gen_target_response(gen_target_response)
 
-    print(json.dumps(gen_target_data, indent=4))
+    # print(json.dumps(gen_target_data, indent=4))
 
     return gen_target_data
 
