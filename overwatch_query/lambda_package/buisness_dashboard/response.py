@@ -1,11 +1,4 @@
-import json
-import ultraimport # type: ignore
 import requests # type: ignore
-
-get_time = ultraimport('__dir__/../generate_time.py', 'get_time')
-
-# start_time, end_time = getTime()
-start_time, end_time = "2024-06-14T06:45:00.000Z", "2024-06-14T07:00:00.000Z"
 
 def get_pairs_response(cookie, start_time, end_time):
 

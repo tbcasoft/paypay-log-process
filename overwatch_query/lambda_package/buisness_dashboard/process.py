@@ -1,20 +1,6 @@
 from collections import defaultdict
 import json
-from response import *
-import ultraimport # type: ignore
-
-get_time = ultraimport('__dir__/../generate_time.py', 'get_time')
-tc_login = ultraimport('__dir__/../tc_login.py')
-
-
-# start_time, end_time = get_time()
-start_time, end_time = "2024-06-16T00:00:00.000Z", "2024-06-17T00:00:00.000Z"
-
-# cookie = tc_login.get_cookie()
-test_cookie = tc_login.get_test_cookie()
-
-pairs_response = get_pairs_response(test_cookie, start_time, end_time)
-issuer_currency_response = get_issuer_currency_response(test_cookie, start_time, end_time)
+from .response import get_issuer_currency_response, get_pairs_response
 
 def process_pair_response(response):
 
@@ -65,13 +51,18 @@ def process_issuer_currency_response(response):
     return data_collector
         
 
+def get_dashboard_data(cookie, start_time, end_time):
 
-issuer_currency_data = process_issuer_currency_response(issuer_currency_response)
-pairs_data = process_pair_response(pairs_response)
+    pairs_response = get_pairs_response(cookie, start_time, end_time)
+    issuer_currency_response = get_issuer_currency_response(cookie, start_time, end_time)
 
+    issuer_currency_data = process_issuer_currency_response(issuer_currency_response)
+    pairs_data = process_pair_response(pairs_response)
 
-print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
-print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
+    print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
+    print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
+
+    return issuer_currency_data, pairs_data
 
 
 

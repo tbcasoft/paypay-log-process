@@ -1,10 +1,6 @@
-import json
-import ultraimport # type: ignore
 import requests # type: ignore
 
-get_time = ultraimport('__dir__/../generate_time.py', 'get_time')
-
-def get_API_gen_target_response(cookie, start_time, end_time):
+def get_job_models_invoice_response(cookie, start_time, end_time):
 
     cookies = {
         'tcSession': cookie,
@@ -29,7 +25,7 @@ def get_API_gen_target_response(cookie, start_time, end_time):
     }
 
     params = {
-        'path': 'overwatch-core-*/_search',
+        'path': 'overwatch-jobmodels-*/_search',
         'method': 'GET',
     }
 
@@ -37,16 +33,16 @@ def get_API_gen_target_response(cookie, start_time, end_time):
         'aggs': {
             '0': {
                 'terms': {
-                    'field': 'status.keyword',
+                    'field': 'sourceTelcoId.keyword',
                     'order': {
                         '_count': 'desc',
                     },
-                    'size': 5,
+                    'size': 10,
                 },
                 'aggs': {
                     '1': {
                         'terms': {
-                            'field': 'tbca_metadata.env.siteSrc.keyword',
+                            'field': 'status.keyword',
                             'order': {
                                 '_count': 'desc',
                             },
@@ -99,12 +95,7 @@ def get_API_gen_target_response(cookie, start_time, end_time):
                     },
                     {
                         'match_phrase': {
-                            'eventType.keyword': 'API',
-                        },
-                    },
-                    {
-                        'match_phrase': {
-                            'name.keyword': 'USERS_GENERATE_TARGET',
+                            'type.keyword': 'U_INVOICE',
                         },
                     },
                     {
