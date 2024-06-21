@@ -51,7 +51,7 @@ def process_issuer_currency_response(response):
     return data_collector
         
 
-def get_dashboard_data(cookie, start_time, end_time):
+def get_dashboard_data(cookie, start_time, end_time, issuers):
 
     pairs_response = get_pairs_response(cookie, start_time, end_time)
     issuer_currency_response = get_issuer_currency_response(cookie, start_time, end_time)
@@ -59,10 +59,30 @@ def get_dashboard_data(cookie, start_time, end_time):
     issuer_currency_data = process_issuer_currency_response(issuer_currency_response)
     pairs_data = process_pair_response(pairs_response)
 
+    checkDefault(issuer_currency_data, pairs_data, issuers)
+
     # print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
     # print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
 
     return issuer_currency_data, pairs_data
+
+def checkDefault(refunds_data, payment_flow_data, issuers):
+    for issuer in issuers:
+        if issuer not in refunds_data:
+            refunds_data[issuer] = {
+                "count": 0,
+                "sum_of_amount": 0
+            }
+        if issuer not in payment_flow_data["CPM"]:
+            payment_flow_data["CPM"][issuer] = {
+                "count": 0,
+                "dest_amount": 0
+            }
+        if issuer not in payment_flow_data["MPM"]:
+            payment_flow_data["MPM"][issuer] = {
+                "count": 0,
+                "dest_amount": 0
+            } 
 
 
 

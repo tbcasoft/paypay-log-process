@@ -16,12 +16,21 @@ def process_job_modles_invoice_response(response):
         
     return data_collector
 
-def get_dashboard_data(cookie, start_time, end_time):
+def get_dashboard_data(cookie, start_time, end_time, issuers):
 
     job_modles_invoice_response = get_job_models_invoice_response(cookie, start_time, end_time)
 
     job_modles_invoice_data = process_job_modles_invoice_response(job_modles_invoice_response)
 
+    checkDefault(job_modles_invoice_data, issuers)
     # print(json.dumps(job_modles_invoice_data, indent=4))
 
     return job_modles_invoice_data
+
+def checkDefault(data, issuers):
+    for issuer in issuers:
+        if issuer not in data:
+            data[issuer] = {
+                "rejected_count": 0
+            }
+
