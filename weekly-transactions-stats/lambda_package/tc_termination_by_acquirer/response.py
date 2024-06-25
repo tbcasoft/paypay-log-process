@@ -1,32 +1,9 @@
 import requests # type: ignore
 
-def get_API_terminate_response(cookie, start_time, end_time):
-    print("response was called")
-    cookies = {
-        'tcSession': cookie,
-    }
-
+def get_API_terminate_response(address, start_time, end_time):
+    
     headers = {
-        'Accept': 'text/plain, */*; q=0.01',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Connection': 'keep-alive',
         'Content-Type': 'application/json',
-        # 'Cookie': 'tcSession=MTcxODkzMjkyM3xHd3dBR0RZMk56UmtOV0kyTUdNd01XUmpZV0l3T1RrNU5UQmlaZz09fC6OVx0AJhOUjeVLy0PBc6aw8G1PakhtbyzECfZs8saO',
-        'Origin': 'https://tc-2pn1ygvtl5.xiveh.com',
-        'Referer': 'https://tc-2pn1ygvtl5.xiveh.com/kibana/s/tbca-central/app/dev_tools',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-        'kbn-xsrf': 'kibana',
-        'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"',
-    }
-
-    params = {
-        'path': 'overwatch-jobmodels-*/_search',
-        'method': 'GET',
     }
 
     json_data = {
@@ -98,13 +75,9 @@ def get_API_terminate_response(cookie, start_time, end_time):
         },
     }
 
-    response = requests.post(
-        'https://tc-2pn1ygvtl5.xiveh.com/kibana/s/tbca-central/api/console/proxy',
-        params=params,
-        cookies=cookies,
-        headers=headers,
-        json=json_data,
-    )
-
+    response = requests.get(f"http://{address}/overwatch-jobmodels-*/_search", 
+                            headers=headers, 
+                            json=json_data)
+                            
     result = response.json()
     return result

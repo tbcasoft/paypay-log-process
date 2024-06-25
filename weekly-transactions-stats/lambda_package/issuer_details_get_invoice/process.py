@@ -1,10 +1,8 @@
 from collections import defaultdict
-import json
 from .response import get_job_models_invoice_response
 
 def process_job_modles_invoice_response(response):
 
-    # print(json.dumps(response, indent=4))
     data_collector = defaultdict(dict)
     sub_dict = response["aggregations"]["0"]["buckets"]
 
@@ -16,14 +14,13 @@ def process_job_modles_invoice_response(response):
         
     return data_collector
 
-def get_dashboard_data(cookie, start_time, end_time, issuers):
+def get_dashboard_data(address, start_time, end_time, issuers):
 
-    job_modles_invoice_response = get_job_models_invoice_response(cookie, start_time, end_time)
+    job_modles_invoice_response = get_job_models_invoice_response(address, start_time, end_time)
 
     job_modles_invoice_data = process_job_modles_invoice_response(job_modles_invoice_response)
 
     checkDefault(job_modles_invoice_data, issuers)
-    # print(json.dumps(job_modles_invoice_data, indent=4))
 
     return job_modles_invoice_data
 
@@ -33,4 +30,3 @@ def checkDefault(data, issuers):
             data[issuer] = {
                 "rejected_count": 0
             }
-

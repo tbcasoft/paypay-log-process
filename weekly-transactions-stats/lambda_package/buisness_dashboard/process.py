@@ -1,10 +1,7 @@
 from collections import defaultdict
-import json
 from .response import get_issuer_currency_response, get_pairs_response
 
 def process_pair_response(response):
-
-    # print(json.dumps(response, indent=4))
 
     data_collector = {
     "CPM" : defaultdict(dict),
@@ -34,7 +31,6 @@ def process_pair_response(response):
     return data_collector
 
 def process_issuer_currency_response(response):
-    # print(json.dumps(response, indent=4))
 
     data_collector = defaultdict(dict)
 
@@ -51,18 +47,15 @@ def process_issuer_currency_response(response):
     return data_collector
         
 
-def get_dashboard_data(cookie, start_time, end_time, issuers):
+def get_dashboard_data(address, start_time, end_time, issuers):
 
-    pairs_response = get_pairs_response(cookie, start_time, end_time)
-    issuer_currency_response = get_issuer_currency_response(cookie, start_time, end_time)
+    pairs_response = get_pairs_response(address, start_time, end_time)
+    issuer_currency_response = get_issuer_currency_response(address, start_time, end_time)
 
     issuer_currency_data = process_issuer_currency_response(issuer_currency_response)
     pairs_data = process_pair_response(pairs_response)
 
     checkDefault(issuer_currency_data, pairs_data, issuers)
-
-    # print("\nRefunds - From Amounts by Issuer Currency:\n\n", json.dumps(issuer_currency_data, indent=4))
-    # print("\nPayments - From/To Amounts by Issuer/Currency Pairs:\n\n", json.dumps(pairs_data, indent=4))
 
     return issuer_currency_data, pairs_data
 
@@ -83,6 +76,3 @@ def checkDefault(refunds_data, payment_flow_data, issuers):
                 "count": 0,
                 "dest_amount": 0
             } 
-
-
-

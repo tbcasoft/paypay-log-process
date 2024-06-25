@@ -1,18 +1,17 @@
 function calculateAnalysis(dataArray, numIssuers, qrData) {
 
-  var groupOneAnchors = [1, 5];
-
-  for(var i = 0; i < groupOneAnchors.length; i++){
-    var startAnchor = groupOneAnchors[i];
-    startAnchor = normalizeAnchor(startAnchor, numIssuers);
-    var largeTotal = setDefaultTotal(dataArray, startAnchor, numIssuers);
-    dataArray[startAnchor - 1] = largeTotal;
-  }
-
-  var groupTwoAnchors = {
+  var groupAnchors = {
+    1: {
+      "targets": [2, 3, 4],
+      "function": vals => vals[0] + vals[1] - vals[2]
+    },
+    5: {
+      "targets": [6, 7, 8],
+      "function": vals => vals[0] + vals[1] + vals[2]
+    },
     10: {
       "targets": [6, 11],
-      "function": vals => vals.reduce((acc, cur) => acc + cur, 0)
+      "function": vals => vals[0] + vals[1]
     },
     12: {
       "targets": [10, 11],
@@ -30,16 +29,16 @@ function calculateAnalysis(dataArray, numIssuers, qrData) {
     }
   };
 
-  for(var anchorKey in groupTwoAnchors) {
-    var targets = groupTwoAnchors[anchorKey]["targets"];
+  for(var anchorKey in groupAnchors) {
+    var targets = groupAnchors[anchorKey]["targets"];
     var normalizedTargets = targets.map(x => normalizeAnchor(x, numIssuers) - 1);
-    var func = groupTwoAnchors[anchorKey]["function"];
+    var func = groupAnchors[anchorKey]["function"];
 
     startAnchor = normalizeAnchor(anchorKey, numIssuers) - 1;
     applyFuntion(dataArray, startAnchor, normalizedTargets, func, numIssuers + 1);
 
-    setQrData(dataArray, numIssuers, qrData);
   }
+  setQrData(dataArray, numIssuers, qrData);
 
   setCPMTerminationData(dataArray, numIssuers);
 }
@@ -81,8 +80,9 @@ function setTargetTotal(data, outputAnchor, targetAnchors, numIssuers) {
 
 function applyFuntion(data, startAnchor, targetAnchors, func, numIssuers) {
   for(var issuer = 0; issuer < numIssuers; issuer++) {
-    var targetAnchors = targetAnchors.map(x => x + issuer);
-    var targetValues = retrieveTargetValues(data, targetAnchors);
+    var offsetTargetAnchors = targetAnchors.map(x => x + issuer);
+    var targetValues = retrieveTargetValues(data, offsetTargetAnchors);
+    
     var result = func(targetValues);
     data[startAnchor + issuer] = result;
   }

@@ -12,7 +12,9 @@ function getDailyOverwatchQuery() {
   } 
 
   var stmt = conn.prepareStatement(`
-      SELECT dod.time as Time, dod.issuer as Issuer, 
+      SELECT dod.date as Date, 
+      dod.acquier as Acquier,
+      dod.issuer as Issuer, 
       dod.rejected_job_models_invoice_count as Invoice, 
       dod.rejected_jobmodels_RFP_count as RFP,
       dod.api_gen_target_count as GenTarget,
@@ -26,14 +28,14 @@ function getDailyOverwatchQuery() {
       dod.termination_EXPIRED_CODE as ExpiredCode, 
       dod.termination_ACQUIRER_VALIDATION as AcquirerValidation
       FROM hour_qr.daily_overwatch_dashboard dod  
-      WHERE time = ?
-      ORDER BY time
+      WHERE date = ? AND acquier = ?
+      ORDER BY date
     `);
-
-  var raw_data_sheet = SpreadsheetApp.getActive().getSheetByName('JKO/ESB/PXP');
+  var issuerList = getIssuers();
+  var acquier = getAcquier();
+  var raw_data_sheet = SpreadsheetApp.getActive().getSheetByName(issuerList.join("/"));
   
-  var lastSheetRow = raw_data_sheet.getLastRow(); 
-  var lastRow = raw_data_sheet.getRange(lastSheetRow, 1).getValue(); 
+  var lastRow = getLastRow(); 
   
   var lastDateStr = raw_data_sheet.getRange("A" + lastRow.toString()).getValue();
   var lastDate = stringToDate(lastDateStr);
@@ -43,24 +45,29 @@ function getDailyOverwatchQuery() {
   var db_format_curDate = formatDbDate(curDate);
 
   stmt.setString(1, db_format_curDate);
+  stmt.setString(2, acquier);
 
   var results = stmt.executeQuery();
-  var rawColumnCount = results.getMetaData().getColumnCount();
+  var dbColumnCount = results.getMetaData().getColumnCount();
 
-  var data = [];
-  
+  var unsortedData = [];
+
   while (results.next()) {
     var row = [];
-    for(var col = 3; col <= rawColumnCount; col ++) {
+    for(var col = 3; col <= dbColumnCount; col ++) {
       row.push(results.getString(col));
     }
-    data.push(row);
+    unsortedData.push(row);
   }
-  
+
+  var data = sortDataByIssuer(issuerList, unsortedData);
+
   var columnCount = data[0].length;
   // Logger.log(`raw data is: ${data}`);
+  // Logger.log(`raw data length is: ${columnCount}`);
 
-  var numIssuers = data.length;
+  var numIssuers = issuerList.length;
+  // Logger.log(`issuer list length is: ${numIssuers}`)
   var anchorOffsets = getAnchorOffsets(numIssuers);
   var outputData = Array(16 * (numIssuers + 1) + 20).fill(0);
   var outputColumnCount = outputData.length;
@@ -86,7 +93,7 @@ function getDailyOverwatchQuery() {
 
   // Logger.log(`first step output data: ${outputData}`);
 
-  var cpmTerminationAnchors = [0, 2, 3].map(x => 16 * (numIssuers + 1) + 14 + x);
+  var cpmTerminationAnchors = [0, 3, 2].map(x => 16 * (numIssuers + 1) + 14 + x);
   for(var rejectCode = 3; rejectCode > 0; rejectCode-=1) {
     for(var issuer = 0; issuer < numIssuers; issuer++) {
       var val = Number(data[issuer][columnCount - rejectCode]);
@@ -109,11 +116,13 @@ function getDailyOverwatchQuery() {
   var analysis_data_range = raw_data_sheet.getRange(curRow, 2, 1, outputColumnCount);
   analysis_data_range.setValues([outputData]);
 
-  var rowCountCell = raw_data_sheet.getRange(lastSheetRow + 1, 1);
-  rowCountCell.setValue(curRow);
+
+  updateRowCount();
 
   results.close();
   stmt.close();
+
+  updatePPFailureRate(display_date);
 }
 
 
@@ -139,4 +148,51 @@ function getAnchorOffsets(numIssuers) {
   var anchors = [11, 15, 13, 7, 2, 6, 3, 8, 4];
   var normalizedAnchors = anchors.map(x => normalizeAnchor(x, numIssuers));
   return normalizedAnchors;
+}
+
+function getIssuers() {
+  var meta_data_sheet = SpreadsheetApp.getActive().getSheetByName('MetaData');
+  var numIssuers = meta_data_sheet.getRange("B4").getValue();
+  var issuerCell = meta_data_sheet.getRange("B5")
+  // Logger.log(`num issuer is: ${numIssuers}`);
+  var issuerList = [];
+  for(var i = 0; i < numIssuers; i++) {
+    var issuer = issuerCell.offset(0, i).getValue();
+    issuerList.push(issuer);
+  }
+  return issuerList;
+}
+
+function getAcquier() {
+  var meta_data_sheet = SpreadsheetApp.getActive().getSheetByName('MetaData');
+  var acquierCell = meta_data_sheet.getRange("B7");
+  return acquierCell.getValue();
+}
+
+function sortDataByIssuer(issuerList, unsortedData) {
+  for (var i = 0; i < issuerList.length; i++) {
+    if (issuerList[i] != unsortedData[i][0]) {
+      var temp = unsortedData[i];
+      for (var j = i + 1; j < issuerList.length; j++) {
+        if (unsortedData[j][0] == issuerList[i]) {
+          unsortedData[i] = unsortedData[j];
+          unsortedData[j] = temp;
+        }
+      }
+    }
+  }
+  return unsortedData.map(x => x.slice(1));
+}
+
+function getLastRow() {
+  var meta_data_sheet = SpreadsheetApp.getActive().getSheetByName('MetaData');
+  var rowCountCell = meta_data_sheet.getRange("B3");
+  return rowCountCell.getValue();
+}
+
+function updateRowCount() {
+  var meta_data_sheet = SpreadsheetApp.getActive().getSheetByName('MetaData');
+  var rowCountCell = meta_data_sheet.getRange("B3");
+  var newRowCount = rowCountCell.getValue() + 1;
+  rowCountCell.setValue(newRowCount);
 }

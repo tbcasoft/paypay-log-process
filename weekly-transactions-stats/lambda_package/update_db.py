@@ -8,7 +8,8 @@ def update_dashboard_table(connection, start_time, response_data, issuers):
 
     update_table = '''
     INSERT INTO daily_overwatch_dashboard 
-    (time, 
+    (date,
+    acquier,
     issuer, 
     rejected_job_models_invoice_count, 
     rejected_jobmodels_RFP_count, 
@@ -23,7 +24,7 @@ def update_dashboard_table(connection, start_time, response_data, issuers):
     termination_EXPIRED_CODE,
     termination_ACQUIRER_VALIDATION)
     VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     '''
 
     formatted_date = start_time[:10]
@@ -31,8 +32,9 @@ def update_dashboard_table(connection, start_time, response_data, issuers):
 
     # issuers = list(response_data["invoice"].keys())[::-1]
     data = []
+    acquier = "PPY"
 
-    print(json.dumps(response_data, indent=4))
+    # print(json.dumps(response_data, indent=4))
 
     for issuer in issuers:
 
@@ -55,12 +57,14 @@ def update_dashboard_table(connection, start_time, response_data, issuers):
         termination_EXPIRED_CODE = api_terminate["EXPIRED_CODE"][issuer]
         termination_ACQUIRER_VALIDATION = api_terminate["ACQUIRER_VALIDATION"][issuer]
 
-        data.append((formatted_date, issuer, rejected_job_models_invoice_count, rejected_jobmodels_RFP_count,
+        data.append((formatted_date, acquier, issuer, rejected_job_models_invoice_count, rejected_jobmodels_RFP_count,
                      api_gen_target_count, payments_CPM_count, payments_CPM_dest_amount, payments_MPM_count,
                      payments_MPM_dest_amount, refunds_count, refunds_sum_of_amount,
                      termination_OPT_OUT, termination_EXPIRED_CODE, termination_ACQUIRER_VALIDATION))
-
-    cursor.executemany(update_table, data)
+    
+    print(data)
+    for row in data:
+        cursor.execute(update_table, row)
 
     connection.commit()
     cursor.close()

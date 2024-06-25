@@ -1,10 +1,9 @@
 from collections import defaultdict
-import json
 from .response import get_API_gen_target_response
 
 def process_gen_target_response(response):
-
-    # print(json.dumps(response, indent=4))
+    
+    
     data_collector = defaultdict(dict)
     sub_dict = response["aggregations"]["0"]["buckets"][0]["1"]["buckets"]
 
@@ -15,15 +14,13 @@ def process_gen_target_response(response):
         
     return data_collector
 
-def get_dashboard_data(cookie, start_time, end_time, issuers):
+def get_dashboard_data(address, start_time, end_time, issuers):
 
-    gen_target_response = get_API_gen_target_response(cookie, start_time, end_time)
+    gen_target_response = get_API_gen_target_response(address, start_time, end_time)
 
     gen_target_data = process_gen_target_response(gen_target_response)
 
     checkDefault(gen_target_data, issuers)
-
-    # print(json.dumps(gen_target_data, indent=4))
 
     return gen_target_data
 
@@ -33,4 +30,3 @@ def checkDefault(data, issuers):
             data[issuer] = {
                 "count": 0
             }
-
