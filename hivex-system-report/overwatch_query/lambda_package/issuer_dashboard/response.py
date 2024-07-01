@@ -1,5 +1,5 @@
 import requests # type: ignore
-import json
+
 
 def get_get_invoice_latency_response(address, start_time, end_time, num_issuers):
 

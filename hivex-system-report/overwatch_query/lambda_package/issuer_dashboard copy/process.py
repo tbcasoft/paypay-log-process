@@ -1,5 +1,6 @@
 from collections import defaultdict
-from .response import get_get_invoice_latency_response, get_pay_latency_response, get_conf_page_latency_response
+from response import get_get_invoice_latency_response, get_pay_latency_response, get_conf_page_latency_response
+import json
 
 
 def process_response(response):

@@ -88,7 +88,7 @@ def add_acquire_column():
     refunds_sum_of_amount INT NOT NULL,
     termination_OPT_OUT INT NOT NULL,
     termination_EXPIRED_CODE INT NOT NULL,
-    termination_ACQUIRER_VALIDATION INT NOT NULL
+    termination_ACQUIRER_VALIDATION INT NOT NULL,
     PRIMARY KEY (date, acquier issuer)
     );
     '''
