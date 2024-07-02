@@ -1,108 +1,78 @@
-function calculateAnalysis(dataArray, numIssuers, qrData) {
+function calculateAnalysis(numIssuers, qrData, lastRow, raw_data_sheet) {
 
-  var groupAnchors = {
-    1: {
-      "targets": [2, 3, 4],
-      "function": vals => vals[0] + vals[1] - vals[2]
+  var namedRangeAnchors = {
+    'totalTransactionAmountJPYMinusRefund': {
+      "targets": ['totalCPMTransactionAmountJPY', 'totalMPMTransactionAmountJPY', 'totalRefundAmountJPY'],
+      "formula": '=#0 + #1 - #2'
     },
-    5: {
-      "targets": [6, 7, 8],
-      "function": vals => vals[0] + vals[1] + vals[2]
+    'totalSuccessfulTransaction': {
+      "targets": ['totalMPMPaymentSuccess', 'totalCPMPaymentSuccess', 'totalRefundSuccess'],
+      "formula": '=#0 + #1 + #2'
     },
-    10: {
-      "targets": [6, 11],
-      "function": vals => vals[0] + vals[1]
+    'totalMPMPaymentSuccessfulAndIncomplete': {
+      "targets": ['totalMPMPaymentSuccess', 'totalIncompleteMPMPaymentFailedOnIssuer'],
+      "formula": '=#0 + #1'
     },
-    12: {
-      "targets": [10, 11],
-      "function": vals => vals[1]/vals[0]
+    'incompleteMPMPaymentRateAsPercentageOfTotalMPMPayment': {
+      "targets": ['totalMPMPaymentSuccessfulAndIncomplete', 'totalIncompleteMPMPaymentFailedOnIssuer'],
+      "formula": '=#1 / #0'
     },
-    14: {
-      "targets": [7, 13, 15],
-      "function": vals => (vals[0] + vals[2]) / vals[1]
+    'QRUtilizationRate': {
+      "targets": ['totalCPMPaymentSuccess', 'totalGenerateQRRequest', 'totalRequestForPaymentRejectionIssuer'],
+      "formula": '=(#0 + #2) / #1'
       //  (0 + 2) / 1
     }, 
-    16: {
-      "targets": [7, 15],
-      "function": vals => 1 - (vals[1] / (vals[0] + vals[1]))
-      // 1 - (1 / (0 + 1))
+    'totalRequestForPaymentSuccessRate': {
+      "targets": ['totalCPMPaymentSuccess', 'totalRequestForPaymentRejectionIssuer'],
+      "formula": '=1 - (#1 / (#0 + #1))'
+      // '1' - (1 / (0 + 1))
     }
   };
 
-  for(var anchorKey in groupAnchors) {
-    var targets = groupAnchors[anchorKey]["targets"];
-    var normalizedTargets = targets.map(x => normalizeAnchor(x, numIssuers) - 1);
-    var func = groupAnchors[anchorKey]["function"];
+  for(var anchorKey in namedRangeAnchors) {
+    var targets = namedRangeAnchors[anchorKey]["targets"];
+    var offsetedRanges = targets.map(x => offsetNamedRange(x, raw_data_sheet, lastRow));
+    var formula = namedRangeAnchors[anchorKey]["formula"];
 
-    startAnchor = normalizeAnchor(anchorKey, numIssuers) - 1;
-    applyFuntion(dataArray, startAnchor, normalizedTargets, func, numIssuers + 1);
+    for (var issuer = 0; issuer <= numIssuers; issuer++) {
+      var copyFormula = formula;
+      for (var i = 0; i < offsetedRanges.length; i++) {
+        var targetRange = offsetedRanges[i].offset(0, issuer);
+        var targetRangeName = targetRange.getA1Notation();
+        var tempFormula = copyFormula.replace(new RegExp(`#${i}`, 'g'), targetRangeName);
+        copyFormula = tempFormula;
+      }
 
-  }
-  setQrData(dataArray, numIssuers, qrData);
-
-  setCPMTerminationData(dataArray, numIssuers);
-}
-
-
-function setCPMTerminationData(outputData, numIssuers) {
-  var offset = outputData.length - 6;
-
-  var total = outputData[offset] + outputData[offset + 2] + outputData[offset + 3];
-  outputData[offset + 4] = total;
-
-  var totalCPMAmount = outputData[normalizeAnchor(7, numIssuers) - 1];
-  var totalRFP = outputData[normalizeAnchor(15, numIssuers) - 1];
-  
-  outputData[offset + 1] = outputData[offset + 0] / (total + totalCPMAmount + totalRFP);
-  outputData[offset + 5] = total / (total + totalCPMAmount + totalRFP);
-}
-
-
-function setDefaultTotal(data, startAnchor, numIssuers) {
-  var targetAnchors = [4, 8, 12].map(x => startAnchor + x);
-  var largeTotal = setTargetTotal(data, startAnchor, targetAnchors, numIssuers);
-  return largeTotal;
-}
-
-function setTargetTotal(data, outputAnchor, targetAnchors, numIssuers) {
-  var largeTotal = 0
-  for(var issuer = 0; issuer < numIssuers; issuer ++) { 
-    var subTotal = 0;
-    for(var numTarget = 0; numTarget < targetAnchors.length; numTarget++) {
-      var targetIndex = targetAnchors[numTarget] + issuer;
-      subTotal += data[targetIndex];
+      var startAnchor = offsetNamedRange(anchorKey, raw_data_sheet, lastRow);
+      var resultRange = startAnchor.offset(0, issuer);
+      resultRange.setFormula(copyFormula);
     }
-    data[outputAnchor + issuer] = subTotal;
-    largeTotal += subTotal;
   }
-  return largeTotal;
+  setQrData(raw_data_sheet, qrData, lastRow);
+
+  setCPMTerminationData(raw_data_sheet, lastRow);
 }
 
-function applyFuntion(data, startAnchor, targetAnchors, func, numIssuers) {
-  for(var issuer = 0; issuer < numIssuers; issuer++) {
-    var offsetTargetAnchors = targetAnchors.map(x => x + issuer);
-    var targetValues = retrieveTargetValues(data, offsetTargetAnchors);
-    
-    var result = func(targetValues);
-    data[startAnchor + issuer] = result;
-  }
-}
 
-function retrieveTargetValues(data, targetAnchors) {
-  var targetValues = []
-  for(var target = 0; target < targetAnchors.length; target++) {
-    var targetIndex = targetAnchors[target]
-    targetValues.push(data[targetIndex]);
-  }
-  return targetValues;
+function setCPMTerminationData(raw_data_sheet, lastRow) {
+  var startCell = offsetNamedRange('_QR_CPMOptOut', raw_data_sheet, lastRow);
+
+  var total = startCell.getValue() + startCell.offset(0,2).getValue() + startCell.offset(0,3).getValue();
+  startCell.offset(0,4).setValue(total);
+
+  var totalCPMAmount = offsetNamedRange('totalCPMPaymentSuccess', raw_data_sheet, lastRow).getValue();
+  var totalRFP = offsetNamedRange('totalRequestForPaymentRejectionIssuer', raw_data_sheet, lastRow).getValue();
+  
+  startCell.offset(0,1).setValue(startCell.getValue() / (total + totalCPMAmount + totalRFP));
+  startCell.offset(0,5).setValue(total / (total + totalCPMAmount + totalRFP));
 }
 
 function normalizeAnchor(anchor, numIssuers) {
   return (anchor - 1) * (numIssuers + 1) + Math.floor(anchor / 10) * 14 + 1;
 }
 
-function setQrData(outputData, numIssuers, qrData) {
-    var offset = 9 * (numIssuers + 1);
+function setQrData(raw_data_sheet, qrData, lastRow) {
+    var offsetCell = offsetNamedRange('_QR_QRScanFailure1', raw_data_sheet, lastRow);
 
     var MERCHANT_SUSPENDED = qrData[2];
     var Dynamic_QR = qrData[4];
@@ -110,19 +80,24 @@ function setQrData(outputData, numIssuers, qrData) {
     var Others = qrData[6];
     var HIVEX_UNAVAILABLE_MERCHANT = qrData[3];
 
-    outputData[offset + 3] = MERCHANT_SUSPENDED;
-    outputData[offset + 4] = Dynamic_QR;
-    outputData[offset + 7] = P2P;
-    outputData[offset + 8] = Others;
-    outputData[offset + 9] = HIVEX_UNAVAILABLE_MERCHANT;
+    offsetCell.setValue(0);
+    offsetCell.offset(0, 1).setValue(0);
+    offsetCell.offset(0, 2).setValue(0);
+
+    offsetCell.offset(0, 3).setValue(MERCHANT_SUSPENDED);
+    offsetCell.offset(0, 3).setValue(MERCHANT_SUSPENDED);
+    offsetCell.offset(0, 4).setValue(Dynamic_QR);
+    offsetCell.offset(0, 7).setValue(P2P);
+    offsetCell.offset(0, 8).setValue(Others);
+    offsetCell.offset(0, 9).setValue(HIVEX_UNAVAILABLE_MERCHANT);
 
     var qrScanFailure = MERCHANT_SUSPENDED + Dynamic_QR + P2P + Others + HIVEX_UNAVAILABLE_MERCHANT;
-    outputData[offset + 12] = qrScanFailure;
-    var sacnFailureRate = qrScanFailure / (qrScanFailure + outputData[offset + 14]);
-    outputData[offset + 13] = sacnFailureRate;
+    offsetCell.offset(0, 12).setValue(qrScanFailure);
+    var sacnFailureRate = qrScanFailure / (qrScanFailure + offsetCell.offset(0, 14).getValue());
+    offsetCell.offset(0, 13).setValue(sacnFailureRate);
 
-    outputData[offset + 5] = Dynamic_QR / qrScanFailure;
-    outputData[offset + 6] = outputData[offset + 5] * sacnFailureRate;
-    outputData[offset + 10] = HIVEX_UNAVAILABLE_MERCHANT / qrScanFailure;
-    outputData[offset + 11] = outputData[offset + 10] * sacnFailureRate;
+    offsetCell.offset(0, 5).setValue(Dynamic_QR / qrScanFailure);
+    offsetCell.offset(0, 6).setValue(offsetCell.offset(0, 5).getValue() * sacnFailureRate);
+    offsetCell.offset(0, 10).setValue(HIVEX_UNAVAILABLE_MERCHANT / qrScanFailure);
+    offsetCell.offset(0, 11).setValue(offsetCell.offset(0, 10).getValue() * sacnFailureRate);
 }

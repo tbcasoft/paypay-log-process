@@ -25,6 +25,7 @@ function getDailyQrAnalysisResult(conn, startDate) {
   var data = getDailyData(results, columnCount);
 
   results.close();
+  stmt_not_unique.close();
   return data;
 }
 

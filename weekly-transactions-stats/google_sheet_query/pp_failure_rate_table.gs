@@ -1,5 +1,4 @@
 function updatePPFailureRate(date) {
-
   var raw_data_sheet = SpreadsheetApp.getActive().getSheetByName('PP Failure Rate Table');
   var lastRow = getLastRow();
   raw_data_sheet.insertRowBefore(lastRow);
@@ -10,25 +9,44 @@ function updatePPFailureRate(date) {
   startCell.offset(0,-1).setValue(date);
   startCell.offset(0, 15).setValue(0);
 
-  setRawData(startCell, lastRow, issuerList);
+  setRawData(startCell, issuerList);
   calculateData(startCell, lastRow);
 
 }
 
 
-function setRawData(startCell, lastRow, issuerList) {
+function setRawData(startCell, issuerList) {
+  // console.log(`issuer list is: ${issuerList}`);
   var sourceSheetName = issuerList.join("/");
   var formulaPrefix = `='${sourceSheetName}'!`;
   var offsetsAndFunctions = {
-    1: "V", 2: "Z", 3: "AU", 4: "AP", 5: "CB", 6: "CD",
-    8: "BT", 9: "CE", 10: "BD",
-    12: "AO", 13: "AS", 14: "AT"
+    1: "totalMPMPaymentSuccess", 
+    2: "totalCPMPaymentSuccess", 
+    3: "_QR_MPMHivexUnavailableMerchants", 
+    4: "_QR_MPMDynamicQR", 
+    5: "_QR_CPMOptOut", 
+    6: "_QR_CPMAcquirerValidation",
+    8: "totalRequestForPaymentRejectionIssuer", 
+    9: "_QR_CPMExpiredCode", 
+    10: "totalIncompleteMPMPaymentFailedOnIssuer",
+    12: "_QR_MPMMerchantSuspended", 
+    13: "_QR_MPMP2P",
+    14: "_QR_othersError"
   }
 
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sourceSheet = ss.getSheetByName(sourceSheetName);
+  var sourceRow = ss.getRange("MetaData!_META_DATA_numRows").getValue();
+
   for (var offsetIndex in offsetsAndFunctions) {
+    var dataName = offsetsAndFunctions[offsetIndex];
+    var dataTitleCell = sourceSheet.getRange(dataName);
+    var sourceCol = dataTitleCell.getColumn();
+
+    var dataSourceCell = sourceSheet.getRange(sourceRow, sourceCol).getA1Notation();
+
     var targetCell = startCell.offset(0, offsetIndex);
-    var formula = formulaPrefix + offsetsAndFunctions[offsetIndex] + lastRow.toString();
-    Logger.log(formula);
+    var formula = formulaPrefix + dataSourceCell;
     targetCell.setFormula(formula);
   }
 }
